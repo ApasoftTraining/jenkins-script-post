@@ -26,28 +26,30 @@ node ('dev') {
 }
 
 node('prod'){
-
-    //We make an unstash of the file
-    unstash 'Packaged Files'
     
-    // If the directory exists, delete it // We create the directory
-    def dir=""
-    if (isUnix())
-    {
-        dir="/home/jenkins/jenkins-loop"
-        sh "rm -rf ${dir}"
-        sh "mkdir ${dir}"
-        sh "tar xvf files.tar"
-        sh "cp *.jar ${dir}"
+    stage('Unpack files'){
+    //We make an unstash of the file
+        unstash 'Packaged Files'
+        
+        // If the directory exists, delete it // We create the directory
+        def dir=""
+        if (isUnix())
+        {
+            dir="/home/jenkins/jenkins-loop"
+            sh "rm -rf ${dir}"
+            sh "mkdir ${dir}"
+            sh "tar xvf files.tar"
+            sh "cp *.jar ${dir}"
+        }
+        else {
+            dir="C:/jenkins/jenkins-loop" // c:\\jenkins\\
+            bat "rmdir /Q /S ${dir} "
+            bat "mkdir ${dir}"
+            bat "unzip files.tar"
+            bat "copy *.jar ${dir}"
+        }
     }
-    else {
-        dir="C:/jenkins/jenkins-loop" // c:\\jenkins\\
-        bat "rmdir /Q /S ${dir} "
-        bat "mkdir ${dir}"
-        bat "unzip files.tar"
-        bat "copy *.jar ${dir}"
-    }
-    post {
+     post {
         always {
             echo 'Cleaning up workspace...'
             deleteDir()  
@@ -66,11 +68,12 @@ node('prod'){
         unstable {
             echo 'Pipeline is unstable!'          
         }
-        
+
         aborted {
             echo 'Pipeline was aborted!'
         }
     }     
+   
    
 }
 
